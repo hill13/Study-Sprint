@@ -60,7 +60,6 @@ def root():
     }
 
 
-# TODO: We'll add routers here as we build them:
-# from app.routers import auth, habits, checkins, analytics
-# app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
-# app.include_router(habits.router, prefix="/api/habits", tags=["Habits"])
+# Register routers
+from app.routers import auth
+app.include_router(auth.router)
