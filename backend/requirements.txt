@@ -10,12 +10,14 @@ alembic==1.13.1           # Database migrations - version control for your schem
 # Authentication
 python-jose[cryptography]==3.3.0  # JWT token creation and validation
 passlib[bcrypt]==1.7.4    # Password hashing (secure storage)
+bcrypt==4.0.1             # Pinned for passlib compatibility
 
 # Validation & Settings
 pydantic==2.5.3           # Data validation (already included with FastAPI)
 pydantic-settings==2.1.0  # Load settings from .env files
 python-dotenv==1.0.0      # Read .env files
 email-validator==2.1.0    # Email validation for Pydantic EmailStr
+python-multipart==0.0.6   # Form data parsing for OAuth2
 
 # Development
 httpx==0.26.0             # For testing async endpoints

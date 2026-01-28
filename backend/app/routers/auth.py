@@ -7,6 +7,7 @@ Endpoints:
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -138,4 +139,36 @@ def login(user_credentials: UserLogin, db: Session = Depends(get_db)):
     access_token = create_access_token(data={"sub": user.email})
 
     # Step 4: Return the token
+    return Token(access_token=access_token, token_type="bearer")
+
+
+# =============================================================================
+# ENDPOINT 3: OAuth2 Token (for Swagger UI)
+# =============================================================================
+
+# This endpoint follows OAuth2 spec for Swagger's Authorize button
+# It accepts form data with "username" and "password" fields
+
+@router.post("/token", response_model=Token)
+def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
+    """
+    OAuth2 compatible token endpoint for Swagger UI.
+
+    Use this with Swagger's Authorize button.
+    Enter your EMAIL in the username field.
+    """
+    # OAuth2 uses "username" but we use email
+    user = db.query(User).filter(User.email == form_data.username).first()
+
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    access_token = create_access_token(data={"sub": user.email})
     return Token(access_token=access_token, token_type="bearer")

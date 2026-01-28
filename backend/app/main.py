@@ -61,5 +61,6 @@ def root():
 
 
 # Register routers
-from app.routers import auth
+from app.routers import auth, habits
 app.include_router(auth.router)
+app.include_router(habits.router)
