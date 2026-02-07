@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import HabitForm from '../components/HabitForm'
@@ -65,12 +65,17 @@ function Dashboard() {
       <div className="bg-white shadow">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold">StudySprint</h1>
-          <button
-            onClick={handleLogout}
-            className="text-red-500 hover:text-red-700"
-          >
-            Logout
-          </button>
+          <div className="flex gap-4 items-center">
+            <Link to="/analytics" className="text-blue-500 hover:underline">
+              Analytics
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="text-red-500 hover:text-red-700"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </div>
 

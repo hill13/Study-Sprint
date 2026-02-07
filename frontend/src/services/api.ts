@@ -150,8 +150,17 @@ export const checkins = {
 }
 
 // =============================================================================
+// ANALYTICS ENDPOINTS
+// =============================================================================
+
+export const analytics = {
+  // Get all analytics data (weekly checkins, completion rate, streak comparison)
+  getOverview: () => fetchWithAuth('/analytics/overview'),
+}
+
+// =============================================================================
 // DEFAULT EXPORT
 // =============================================================================
 
-const api = { auth, habits, checkins }
+const api = { auth, habits, checkins, analytics }
 export default api
