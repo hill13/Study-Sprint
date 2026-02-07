@@ -61,7 +61,8 @@ def root():
 
 
 # Register routers
-from app.routers import auth, habits, checkins
+from app.routers import auth, habits, checkins, analytics
 app.include_router(auth.router)
 app.include_router(habits.router)
 app.include_router(checkins.router)
+app.include_router(analytics.router)
