@@ -57,40 +57,40 @@ def create_checkin(
 ):
     """Record a check-in for a habit. This updates the streak!"""
     # Step 1: Verify habit belongs to current user
-    # TODO: habit = db.query(Habit).filter(Habit.id == checkin.habit_id, Habit.user_id == current_user.id).first()
-    # TODO: if not habit:
-    #     raise HTTPException(status_code=404, detail="Habit not found")
+    habit = db.query(Habit).filter(Habit.id == checkin.habit_id, Habit.user_id == current_user.id).first()
+    if not habit:
+        raise HTTPException(status_code=404, detail="Habit not found")
 
     # Step 2: Set check_in_date to today if not provided
-    # TODO: check_in_date = checkin.check_in_date or date.today()
+    check_in_date = checkin.check_in_date or date.today()
 
     # Step 3: Check if already checked in for this date
-    # TODO: existing = db.query(CheckIn).filter(
-    #     CheckIn.habit_id == checkin.habit_id,
-    #     CheckIn.check_in_date == check_in_date
-    # ).first()
-    # TODO: if existing:
-    #     raise HTTPException(status_code=400, detail="Already checked in for this date")
+    existing = db.query(CheckIn).filter(
+        CheckIn.habit_id == checkin.habit_id,
+        CheckIn.check_in_date == check_in_date
+    ).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Already checked in for this date")
 
     # Step 4: Create the check-in
-    # TODO: db_checkin = CheckIn(
-    #     habit_id=checkin.habit_id,
-    #     check_in_date=check_in_date,
-    #     status=checkin.status,
-    #     minutes_logged=checkin.minutes_logged,
-    #     notes=checkin.notes
-    # )
-    # TODO: db.add(db_checkin)
-    # TODO: db.commit()
-    # TODO: db.refresh(db_checkin)
+    db_checkin = CheckIn(
+        habit_id=checkin.habit_id,
+        check_in_date=check_in_date,
+        status=checkin.status,
+        minutes_logged=checkin.minutes_logged,
+        notes=checkin.notes
+    )
+    db.add(db_checkin)
+    db.commit()
+    db.refresh(db_checkin)
 
     # Step 5: Update the streak!
-    # TODO: update_streak_on_checkin(db, habit, check_in_date)
+    update_streak_on_checkin(db, habit, check_in_date)
 
     # Step 6: Return the check-in
-    # TODO: return db_checkin
+    return db_checkin
 
-    pass
+    
 
 
 # =============================================================================
@@ -114,17 +114,17 @@ def get_checkins(
 ):
     """Get all check-ins for a specific habit."""
     # Step 1: Verify habit belongs to current user
-    # TODO: habit = db.query(Habit).filter(Habit.id == habit_id, Habit.user_id == current_user.id).first()
-    # TODO: if not habit:
-    #     raise HTTPException(status_code=404, detail="Habit not found")
+    habit = db.query(Habit).filter(Habit.id == habit_id, Habit.user_id == current_user.id).first()
+    if not habit:
+        raise HTTPException(status_code=404, detail="Habit not found")
 
     # Step 2: Query check-ins for this habit
-    # TODO: checkins = db.query(CheckIn).filter(CheckIn.habit_id == habit_id).order_by(CheckIn.check_in_date.desc()).all()
+    checkins = db.query(CheckIn).filter(CheckIn.habit_id == habit_id).order_by(CheckIn.check_in_date.desc()).all()
 
     # Step 3: Return check-ins
-    # TODO: return checkins
+    return checkins
 
-    pass
+    
 
 
 # =============================================================================
@@ -149,20 +149,20 @@ def delete_checkin(
 ):
     """Delete a check-in."""
     # Step 1: Find the check-in
-    # TODO: checkin = db.query(CheckIn).filter(CheckIn.id == checkin_id).first()
-    # TODO: if not checkin:
-    #     raise HTTPException(status_code=404, detail="Check-in not found")
+    checkin = db.query(CheckIn).filter(CheckIn.id == checkin_id).first()
+    if not checkin:
+        raise HTTPException(status_code=404, detail="Check-in not found")
 
     # Step 2: Verify habit belongs to current user
-    # TODO: habit = db.query(Habit).filter(Habit.id == checkin.habit_id, Habit.user_id == current_user.id).first()
-    # TODO: if not habit:
-    #     raise HTTPException(status_code=404, detail="Check-in not found")
+    habit = db.query(Habit).filter(Habit.id == checkin.habit_id, Habit.user_id == current_user.id).first()
+    if not habit:
+        raise HTTPException(status_code=404, detail="Check-in not found")
 
     # Step 3: Delete the check-in
-    # TODO: db.delete(checkin)
-    # TODO: db.commit()
+    db.delete(checkin)
+    db.commit()
 
     # Step 4: Return nothing (204 No Content)
-    # TODO: return None
+    return None
 
-    pass
+    
