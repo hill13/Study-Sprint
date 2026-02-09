@@ -47,6 +47,20 @@ function Dashboard() {
     navigate('/login')  // Redirect to login
   }
 
+  // Handle delete habit
+  const handleDelete = async (habitId: number, habitName: string) => {
+    if (!window.confirm(`Delete "${habitName}"? This cannot be undone.`)) {
+      return
+    }
+
+    try {
+      await api.habits.delete(habitId)
+      refreshHabits()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Delete failed')
+    }
+  }
+
   // Handle check-in (mark habit as done today)
   const handleCheckin = async (habitId: number) => {
     try {
@@ -115,13 +129,21 @@ function Dashboard() {
               </p>
             </div>
 
-            {/* Check-in button */}
-            <button
-              onClick={() => handleCheckin(habit.id)}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              Check In
-            </button>
+            {/* Action buttons */}
+            <div className="flex gap-3 items-center">
+              <button
+                onClick={() => handleCheckin(habit.id)}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+              >
+                Check In
+              </button>
+              <button
+                onClick={() => handleDelete(habit.id, habit.name)}
+                className="text-red-500 hover:text-red-700 text-sm"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         ))}
 
