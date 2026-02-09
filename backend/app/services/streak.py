@@ -178,7 +178,7 @@ def handle_missed_days(streak: Streak, habit: Habit, missed_days: int):
     if missed_days <= grace_available:
         streak.grace_days_used += missed_days
     else:
-    #     # Not enough grace days - streak breaks
+         # Not enough grace days - streak breaks
         reset_streak(streak)
 
     
