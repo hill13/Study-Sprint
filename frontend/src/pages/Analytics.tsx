@@ -64,10 +64,10 @@ function Analytics() {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Top bar */}
-      <div className="bg-white shadow">
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg">
         <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold">Analytics</h1>
-          <Link to="/dashboard" className="text-blue-500 hover:underline">
+          <h1 className="text-xl font-bold text-white">Analytics</h1>
+          <Link to="/dashboard" className="text-white/80 hover:text-white transition-colors">
             Back to Dashboard
           </Link>
         </div>
@@ -77,7 +77,7 @@ function Analytics() {
       <div className="max-w-4xl mx-auto px-4 py-8">
 
         {/* Completion Rate */}
-        <div className="bg-white p-6 rounded-lg shadow mb-6">
+        <div className="bg-white p-6 rounded-xl shadow-md mb-6 border border-gray-100">
           <h2 className="text-lg font-bold mb-2">Completion Rate (30 days)</h2>
           <div className="flex items-center gap-4">
             <div className="text-4xl font-bold text-blue-500">
@@ -93,7 +93,7 @@ function Analytics() {
         </div>
 
         {/* Weekly Check-ins Bar Chart */}
-        <div className="bg-white p-6 rounded-lg shadow mb-6">
+        <div className="bg-white p-6 rounded-xl shadow-md mb-6 border border-gray-100">
           <h2 className="text-lg font-bold mb-4">Weekly Check-ins</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={data?.weekly_checkins}>
@@ -107,7 +107,7 @@ function Analytics() {
         </div>
 
         {/* Streak Comparison */}
-        <div className="bg-white p-6 rounded-lg shadow mb-6">
+        <div className="bg-white p-6 rounded-xl shadow-md mb-6 border border-gray-100">
           <h2 className="text-lg font-bold mb-4">Streak Comparison</h2>
           {data?.streak_comparison.length === 0 ? (
             <p className="text-gray-500">No habits yet. Create some to see stats!</p>

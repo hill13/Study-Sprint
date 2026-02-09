@@ -38,10 +38,11 @@ function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700">
+      <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md">
         {/* Header */}
-        <h1 className="text-2xl font-bold text-center mb-6">StudySprint</h1>
+        <h1 className="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">StudySprint</h1>
+        <p className="text-center text-gray-500 mb-6">Track your habits, build your streaks</p>
 
         {/* Error message */}
         {error && (
@@ -82,7 +83,7 @@ function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-500 text-white p-3 rounded hover:bg-blue-600 disabled:bg-blue-300"
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-3 rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 transition-all duration-200"
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>
