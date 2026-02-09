@@ -36,7 +36,9 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",  # Vite default dev server
         "http://localhost:3000",  # Common React dev port
+        "https://studysprint.vercel.app",  # Production frontend
     ],
+    allow_origin_regex=r"https://study-sprint.*\.vercel\.app",  # Preview deployments
     allow_credentials=True,  # Allow cookies/auth headers
     allow_methods=["*"],     # Allow all HTTP methods
     allow_headers=["*"],     # Allow all headers
