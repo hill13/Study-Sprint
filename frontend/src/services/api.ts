@@ -22,9 +22,8 @@ function getToken(): string | null {
 async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
   const token = getToken()
 
-  const headers: HeadersInit = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
   }
 
   // Add auth token if we have one
