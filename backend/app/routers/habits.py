@@ -15,13 +15,53 @@ Users can only access their own habits.
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
 from app.models.habit import Habit
 from app.models.user import User
 from app.schemas.habit import HabitCreate, HabitUpdate, HabitResponse
 from app.utils.dependencies import get_current_user
+
+
+# =============================================================================
+# HELPER: Convert Habit + Streak into a response-ready dict
+# =============================================================================
+
+def habit_with_streak(habit: Habit) -> dict:
+    """
+    Flatten streak data from the related Streak object into the habit response.
+
+    The Habit model stores streak data in a separate 'streak' relationship,
+    but the frontend expects it as top-level fields. This function pulls
+    streak fields up so Pydantic can build the HabitResponse correctly.
+    """
+    data = {
+        "id": habit.id,
+        "user_id": habit.user_id,
+        "name": habit.name,
+        "description": habit.description,
+        "subject_tag": habit.subject_tag,
+        "goal_type": habit.goal_type,
+        "target_frequency": habit.target_frequency,
+        "target_minutes": habit.target_minutes,
+        "schedule_type": habit.schedule_type,
+        "schedule_days": habit.schedule_days or [],
+        "strict_streak": habit.strict_streak,
+        "grace_days_per_month": habit.grace_days_per_month,
+        "is_active": habit.is_active,
+        "created_at": habit.created_at,
+    }
+
+    # If this habit has a streak record, pull the data up to top level
+    if habit.streak:
+        data["current_streak"] = habit.streak.current_streak or 0
+        data["best_streak"] = habit.streak.best_streak or 0
+        data["streak_status"] = habit.streak.status or "safe"
+        data["grace_days_used"] = habit.streak.grace_days_used or 0
+        data["grace_days_reset_date"] = habit.streak.grace_days_reset_date
+
+    return data
 
 
 # =============================================================================
@@ -64,8 +104,8 @@ def create_habit(
     db.commit()
     db.refresh(db_habit)
 
-    # Step 3: Return the habit
-    return db_habit
+    # Step 3: Return the habit with streak data
+    return habit_with_streak(db_habit)
 
 
 # =============================================================================
@@ -86,8 +126,13 @@ def get_habits(
     current_user: User = Depends(get_current_user)
 ):
     """Get all habits for the authenticated user."""
-    habits = db.query(Habit).filter(Habit.user_id == current_user.id).all()
-    return habits
+    habits = (
+        db.query(Habit)
+        .options(joinedload(Habit.streak))  # Load streak in same query (avoids N+1)
+        .filter(Habit.user_id == current_user.id)
+        .all()
+    )
+    return [habit_with_streak(h) for h in habits]
 
 
 # =============================================================================
@@ -112,15 +157,20 @@ def get_habit(
     current_user: User = Depends(get_current_user)
 ):
     """Get a specific habit by ID."""
-    # Step 1: Find habit by ID and user_id
-    habit = db.query(Habit).filter(Habit.id == habit_id, Habit.user_id == current_user.id).first()
+    # Step 1: Find habit by ID and user_id (with streak loaded)
+    habit = (
+        db.query(Habit)
+        .options(joinedload(Habit.streak))
+        .filter(Habit.id == habit_id, Habit.user_id == current_user.id)
+        .first()
+    )
 
     # Step 2: If not found, raise 404
     if not habit:
         raise HTTPException(status_code=404, detail="Habit not found")
 
-    # Step 3: Return the habit
-    return habit
+    # Step 3: Return the habit with streak data
+    return habit_with_streak(habit)
 
 
 # =============================================================================
@@ -146,8 +196,13 @@ def update_habit(
     current_user: User = Depends(get_current_user)
 ):
     """Update an existing habit."""
-    # Step 1: Find the habit
-    habit = db.query(Habit).filter(Habit.id == habit_id, Habit.user_id == current_user.id).first()
+    # Step 1: Find the habit (with streak loaded)
+    habit = (
+        db.query(Habit)
+        .options(joinedload(Habit.streak))
+        .filter(Habit.id == habit_id, Habit.user_id == current_user.id)
+        .first()
+    )
 
     # Step 2: If not found, raise 404
     if not habit:
@@ -162,8 +217,8 @@ def update_habit(
     db.commit()
     db.refresh(habit)
 
-    # Step 5: Return updated habit
-    return habit
+    # Step 5: Return updated habit with streak data
+    return habit_with_streak(habit)
 
 
 # =============================================================================

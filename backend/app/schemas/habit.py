@@ -7,7 +7,7 @@ Schemas:
 - HabitResponse: What we return to the client
 """
 
-from datetime import datetime
+from datetime import datetime, date
 from typing import Optional, List
 
 from pydantic import BaseModel
@@ -123,6 +123,13 @@ class HabitResponse(BaseModel):
     grace_days_per_month: int
     is_active: bool
     created_at: datetime
+
+    # Streak data (loaded from streak relationship)
+    current_streak: int = 0
+    best_streak: int = 0
+    streak_status: str = "safe"
+    grace_days_used: int = 0
+    grace_days_reset_date: Optional[date] = None
 
     class Config:
         from_attributes = True

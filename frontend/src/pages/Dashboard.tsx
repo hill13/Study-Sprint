@@ -8,10 +8,18 @@ import HabitForm from '../components/HabitForm'
 interface Habit {
   id: number
   name: string
-  description: string
-  frequency: string
+  description: string | null
+  subject_tag: string | null
+  goal_type: string
+  target_frequency: number
+  schedule_type: string
+  is_active: boolean
   current_streak: number
-  longest_streak: number
+  best_streak: number
+  streak_status: string        // 'safe' | 'grace_used' | 'at_risk' | 'broken'
+  grace_days_used: number
+  grace_days_per_month: number
+  grace_days_reset_date: string | null  // ISO date string from backend
 }
 
 function Dashboard() {
@@ -95,7 +103,17 @@ function Dashboard() {
 
       {/* Main content */}
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <h2 className="text-2xl font-bold mb-6">Today's Habits</h2>
+        <h2 className="text-2xl font-bold mb-4">Today's Habits</h2>
+
+        {/* Grace day info banner */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6 text-sm text-blue-700">
+          <p className="font-medium mb-1">How Grace Days Work</p>
+          <p className="text-blue-600">
+            Life happens! Each habit gets <strong>2 grace days per month</strong> —
+            miss a day without breaking your streak. Grace days reset on the 1st of each month.
+            Use them wisely to keep your streaks alive.
+          </p>
+        </div>
 
         {/* Error message */}
         {error && (
@@ -118,31 +136,72 @@ function Dashboard() {
         {habits.map((habit) => (
           <div
             key={habit.id}
-            className="bg-white p-4 rounded-xl shadow-md mb-3 flex justify-between items-center hover:shadow-lg transition-shadow duration-200 border border-gray-100"
+            className="bg-white p-4 rounded-xl shadow-md mb-3 hover:shadow-lg transition-shadow duration-200 border border-gray-100"
           >
-            {/* Habit info */}
-            <div>
-              <h3 className="font-bold text-lg">{habit.name}</h3>
-              <p className="text-gray-500 text-sm">{habit.description}</p>
-              <p className="text-orange-500 text-sm mt-1">
-                {habit.current_streak} day streak
-              </p>
+            {/* Top row: name + action buttons */}
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="font-bold text-lg">{habit.name}</h3>
+                {habit.description && (
+                  <p className="text-gray-500 text-sm">{habit.description}</p>
+                )}
+              </div>
+
+              <div className="flex gap-3 items-center">
+                <button
+                  onClick={() => handleCheckin(habit.id)}
+                  className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200"
+                >
+                  Check In
+                </button>
+                <button
+                  onClick={() => handleDelete(habit.id, habit.name)}
+                  className="text-red-500 hover:text-red-700 text-sm"
+                >
+                  Delete
+                </button>
+              </div>
             </div>
 
-            {/* Action buttons */}
-            <div className="flex gap-3 items-center">
-              <button
-                onClick={() => handleCheckin(habit.id)}
-                className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200"
-              >
-                Check In
-              </button>
-              <button
-                onClick={() => handleDelete(habit.id, habit.name)}
-                className="text-red-500 hover:text-red-700 text-sm"
-              >
-                Delete
-              </button>
+            {/* Streak info row */}
+            <div className="mt-3 flex flex-wrap gap-3 items-center text-sm">
+              {/* Current streak */}
+              <span className="font-semibold text-orange-500">
+                {habit.current_streak} day streak
+              </span>
+
+              {/* Best streak */}
+              <span className="text-gray-500">
+                Best: {habit.best_streak} days
+              </span>
+
+              {/* Status badge */}
+              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                habit.streak_status === 'safe'
+                  ? 'bg-green-100 text-green-700'
+                  : habit.streak_status === 'grace_used'
+                  ? 'bg-yellow-100 text-yellow-700'
+                  : habit.streak_status === 'at_risk'
+                  ? 'bg-orange-100 text-orange-700'
+                  : 'bg-red-100 text-red-700'
+              }`}>
+                {habit.streak_status === 'safe' && 'Safe'}
+                {habit.streak_status === 'grace_used' && 'Grace Used'}
+                {habit.streak_status === 'at_risk' && 'At Risk'}
+                {habit.streak_status === 'broken' && 'Broken'}
+              </span>
+
+              {/* Grace days info */}
+              <span className="text-gray-400">
+                Grace: {habit.grace_days_used}/{habit.grace_days_per_month} used
+              </span>
+
+              {/* Grace reset date */}
+              {habit.grace_days_reset_date && (
+                <span className="text-gray-400">
+                  Resets: {new Date(habit.grace_days_reset_date).toLocaleDateString()}
+                </span>
+              )}
             </div>
           </div>
         ))}
