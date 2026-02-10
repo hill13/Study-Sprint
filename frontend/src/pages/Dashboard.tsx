@@ -27,6 +27,12 @@ function Dashboard() {
   const [habits, setHabits] = useState<Habit[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+
+  // Edit mode state
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editDescription, setEditDescription] = useState('')
 
   // Hooks
   const { logout } = useAuth()
@@ -76,8 +82,43 @@ function Dashboard() {
       // Refresh habits to update streak
       const data = await api.habits.getAll()
       setHabits(data)
+      // Show success message, auto-dismiss after 3 seconds
+      setSuccess('Checked in! Streak updated.')
+      setError('')
+      setTimeout(() => setSuccess(''), 3000)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Check-in failed')
+      setSuccess('')
+    }
+  }
+
+  // Enter edit mode — populate form with current values
+  const handleEditStart = (habit: Habit) => {
+    setEditingId(habit.id)
+    setEditName(habit.name)
+    setEditDescription(habit.description || '')
+  }
+
+  // Cancel edit mode
+  const handleEditCancel = () => {
+    setEditingId(null)
+    setEditName('')
+    setEditDescription('')
+  }
+
+  // Save edited habit
+  const handleEditSave = async (habitId: number) => {
+    try {
+      await api.habits.update(habitId, {
+        name: editName,
+        description: editDescription || undefined,
+      })
+      setEditingId(null)
+      setSuccess('Habit updated!')
+      setTimeout(() => setSuccess(''), 3000)
+      refreshHabits()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Update failed')
     }
   }
 
@@ -85,7 +126,7 @@ function Dashboard() {
     <div className="min-h-screen bg-gray-100">
       {/* Top bar */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
+        <div className="max-w-5xl mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold text-white">StudySprint</h1>
           <div className="flex gap-4 items-center">
             <Link to="/analytics" className="text-white/80 hover:text-white transition-colors">
@@ -102,7 +143,7 @@ function Dashboard() {
       </div>
 
       {/* Main content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-5xl mx-auto px-4 py-8">
         <h2 className="text-2xl font-bold mb-4">Today's Habits</h2>
 
         {/* Grace day info banner */}
@@ -114,6 +155,13 @@ function Dashboard() {
             Use them wisely to keep your streaks alive.
           </p>
         </div>
+
+        {/* Success message */}
+        {success && (
+          <div className="bg-green-100 text-green-700 p-3 rounded mb-4">
+            {success}
+          </div>
+        )}
 
         {/* Error message */}
         {error && (
@@ -140,26 +188,73 @@ function Dashboard() {
           >
             {/* Top row: name + action buttons */}
             <div className="flex justify-between items-start">
-              <div>
-                <h3 className="font-bold text-lg">{habit.name}</h3>
-                {habit.description && (
-                  <p className="text-gray-500 text-sm">{habit.description}</p>
-                )}
-              </div>
+              {editingId === habit.id ? (
+                // Edit mode: show input fields
+                <div className="flex-1 mr-4">
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-1.5 font-bold text-lg mb-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                  <input
+                    type="text"
+                    value={editDescription}
+                    onChange={(e) => setEditDescription(e.target.value)}
+                    placeholder="Description (optional)"
+                    className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-sm text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  />
+                </div>
+              ) : (
+                // View mode: show text
+                <div>
+                  <h3 className="font-bold text-lg">{habit.name}</h3>
+                  {habit.description && (
+                    <p className="text-gray-500 text-sm">{habit.description}</p>
+                  )}
+                </div>
+              )}
 
               <div className="flex gap-3 items-center">
-                <button
-                  onClick={() => handleCheckin(habit.id)}
-                  className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200"
-                >
-                  Check In
-                </button>
-                <button
-                  onClick={() => handleDelete(habit.id, habit.name)}
-                  className="text-red-500 hover:text-red-700 text-sm"
-                >
-                  Delete
-                </button>
+                {editingId === habit.id ? (
+                  // Edit mode buttons
+                  <>
+                    <button
+                      onClick={() => handleEditSave(habit.id)}
+                      className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors duration-200"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={handleEditCancel}
+                      className="text-gray-500 hover:text-gray-700 text-sm"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  // View mode buttons
+                  <>
+                    <button
+                      onClick={() => handleCheckin(habit.id)}
+                      className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors duration-200"
+                    >
+                      Check In
+                    </button>
+                    <button
+                      onClick={() => handleEditStart(habit)}
+                      className="text-blue-500 hover:text-blue-700 text-sm"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(habit.id, habit.name)}
+                      className="text-red-500 hover:text-red-700 text-sm"
+                    >
+                      Delete
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
