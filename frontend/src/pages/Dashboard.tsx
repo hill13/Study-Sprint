@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import api from '../services/api'
 import HabitForm from '../components/HabitForm'
+import CheckInCalendar from '../components/CheckInCalendar'
 
 // TypeScript type for a Habit object (matches what backend returns)
 interface Habit {
@@ -31,6 +32,8 @@ function Dashboard() {
 
   // Edit mode state
   const [editingId, setEditingId] = useState<number | null>(null)
+  // Calendar toggle — which habit's calendar is open (null = none)
+  const [selectedHabitId, setSelectedHabitId] = useState<number | null>(null)
   const [editName, setEditName] = useState('')
   const [editDescription, setEditDescription] = useState('')
 
@@ -242,6 +245,14 @@ function Dashboard() {
                       Check In
                     </button>
                     <button
+                      onClick={() => setSelectedHabitId(
+                        selectedHabitId === habit.id ? null : habit.id
+                      )}
+                      className="text-purple-500 hover:text-purple-700 text-sm"
+                    >
+                      Calendar
+                    </button>
+                    <button
                       onClick={() => handleEditStart(habit)}
                       className="text-blue-500 hover:text-blue-700 text-sm"
                     >
@@ -298,6 +309,11 @@ function Dashboard() {
                 </span>
               )}
             </div>
+
+            {/* Check-in calendar (shown when user clicks Calendar button) */}
+            {selectedHabitId === habit.id && (
+              <CheckInCalendar habitId={habit.id} />
+            )}
           </div>
         ))}
 
