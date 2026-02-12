@@ -24,6 +24,8 @@ A full-stack habit tracker built for students to build consistent study routines
 - **Streak Tracking** — Automatic streak calculation updated on every check-in
 - **Grace Day System** — 2 forgiveness days per month so one missed day doesn't break your streak
 - **Status Badges** — Color-coded streak status (Safe, Grace Used, At Risk, Broken)
+- **Check-in Calendar** — Monthly calendar grid per habit showing check-in history with color-coded days
+- **Inline Editing** — Edit habit name and description directly from the Dashboard
 - **Analytics Dashboard** — Weekly check-in charts, completion rates, and streak comparisons using Recharts
 - **Responsive UI** — Clean card-based layout with Tailwind CSS
 
@@ -73,8 +75,9 @@ Study-Sprint/
         │   ├── Dashboard.tsx    # Habit list with streak display + check-ins
         │   └── Analytics.tsx    # Charts (Recharts bar charts)
         └── components/
-            ├── HabitForm.tsx     # Create new habit form
-            └── ProtectedRoute.tsx # Route guard (redirects if not logged in)
+            ├── HabitForm.tsx      # Create new habit form
+            ├── CheckInCalendar.tsx # Monthly calendar grid with check-in history
+            └── ProtectedRoute.tsx  # Route guard (redirects if not logged in)
 ```
 
 ---
@@ -161,3 +164,4 @@ Streak statuses:
 - TypeScript strict mode and type safety across the full stack
 - Deploying a full-stack app (Vercel + Render + PostgreSQL)
 - Building a grace day system that tracks streaks with forgiveness logic
+- Building reusable components with date manipulation and Set-based lookups for calendar rendering
