@@ -115,9 +115,9 @@ def update_streak_on_checkin(db: Session, habit: Habit, check_in_date: date) -> 
         streak.streak_start_date = check_in_date
         streak.status = "safe"
 
-    # Step 4: Check if same day (already checked in today)
-    elif check_in_date == streak.last_check_in_date:
-        pass  # No change, already checked in
+    # Step 4: Check if same day or past date (skip streak update)
+    elif check_in_date <= streak.last_check_in_date:
+        pass  # No change for same-day or backdated check-ins
 
     # Step 5: Check if consecutive day (yesterday)
     elif check_in_date == streak.last_check_in_date + timedelta(days=1):
