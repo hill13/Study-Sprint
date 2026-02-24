@@ -22,8 +22,8 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 
-    # Google Gemini API (for AI Insights feature)
-    gemini_api_key: str = ""
+    # OpenAI API (for AI Insights feature)
+    openai_api_key: str = ""
     class Config:
         # This tells pydantic to read from a .env file
         env_file = ".env"
