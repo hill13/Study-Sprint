@@ -95,29 +95,47 @@ function AIInsights() {
   }
 
 
-  // ==========================================================================
-  // STEP 12: JSX — button, loading state, insights panel, error message
-  // ==========================================================================
-  //
-  // TODO: Build the UI
-  //
-  // Layout (same card style as Analytics page: bg-white rounded-xl shadow-md):
-  //
-  //   ┌─────────────────────────────────────────┐
-  //   │  AI Study Coach                         │
-  //   │                                         │
-  //   │  [ Get AI Insights ]  ← button          │
-  //   │                                         │
-  //   │  Thinking...          ← if loading      │
-  //   │                                         │
-  //   │  1. You're doing great with...          │
-  //   │  2. You could improve...        ← text  │
-  //   │  3. Tomorrow, try...            panel   │
-  //   │                                         │
-  //   │  ● Error message      ← if error        │
-  //   └─────────────────────────────────────────┘
+  return (
+    // Same card style as the other Analytics cards for visual consistency
+    <div className="bg-white p-6 rounded-xl shadow-md mb-6 border border-gray-100">
+      <h2 className="text-lg font-bold mb-1">AI Study Coach</h2>
+      <p className="text-gray-500 text-sm mb-4">
+        Get personalized insights based on your habit data.
+      </p>
 
-  return <div />
+      {/* Button — disabled while loading to prevent duplicate requests */}
+      <button
+        onClick={fetchInsights}
+        disabled={loading}
+        className="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {loading ? 'Thinking...' : 'Get AI Insights'}
+      </button>
+
+      {/* "Thinking..." placeholder — only shown before first chunk arrives */}
+      {/* Once insights has text, this disappears and the text panel shows instead */}
+      {loading && !insights && (
+        <p className="text-gray-400 text-sm mt-4 animate-pulse">
+          Analyzing your habits...
+        </p>
+      )}
+
+      {/* Error message — shown if request failed (rate limit, network, etc.) */}
+      {error && (
+        <p className="text-red-500 text-sm mt-4">{error}</p>
+      )}
+
+      {/* Insights panel — appears as chunks stream in, grows word by word */}
+      {insights && (
+        <div className="mt-4 p-4 bg-purple-50 rounded-lg border border-purple-100">
+          {/* whitespace-pre-wrap preserves newlines from the AI response */}
+          <p className="text-gray-700 text-sm leading-relaxed whitespace-pre-wrap">
+            {insights}
+          </p>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default AIInsights

@@ -11,7 +11,7 @@ How it works:
 from datetime import date, timedelta
 from typing import Generator
 
-from google import genai
+from openai import OpenAI
 from sqlalchemy.orm import Session
 
 from app.config import get_settings
@@ -118,8 +118,8 @@ def stream_insights(db: Session, user_id: int) -> Generator[str, None, None]:
 
     # Step 1: Check the API key exists before doing anything else
     # If it's missing, yield an error message and stop immediately
-    if not settings.gemini_api_key:
-        yield "Error: Gemini API key is not configured."
+    if not settings.openai_api_key:
+        yield "Error: OpenAI API key is not configured."
         return  # stops the generator — no more yields after this
 
     # Step 2: Get the user's habit data as a readable text summary
@@ -134,7 +134,7 @@ def stream_insights(db: Session, user_id: int) -> Generator[str, None, None]:
     # Step 3: Build the prompt
     # Two parts: system instructions (the AI's role) + the user's actual data
 
-    system_prompt = """You are an encouraging study coach analyzing a student's habit tracking data.
+    SYSTEM_PROMPT = """You are an encouraging study coach analyzing a student's habit tracking data.
 Give exactly 3 insights formatted as bullet points:
 1. What they are doing great (reference specific habits and numbers)
 2. What they could improve (point out patterns like skipped days or broken streaks)
@@ -146,37 +146,39 @@ Rules:
 - Reference actual numbers and habit names from the data
 - No generic advice — everything must be grounded in their data"""
 
-    # Combine the instructions + user data into one message
-    # This is the full text we send to Gemini
-    full_prompt = f"{system_prompt}\n\nHere is the student's habit data:\n\n{user_summary}"
+    # OpenAI uses a messages array instead of a single combined prompt
+    # system message = AI's instructions, user message = the habit data
 
-    # Step 4: Create the Gemini client
+    # Step 4: Create the OpenAI client
     #
-    # genai       → the Google Gemini SDK we installed (from google import genai)
-    # .Client()   → opens a connection to Google's API (like logging in before you can send a message)
-    # api_key=    → proves to Google we're allowed to use the API
-    # settings.gemini_api_key → reads GEMINI_API_KEY from our .env file via config.py
+    # OpenAI()    → opens a connection to OpenAI's API
+    # api_key=    → proves to OpenAI we're allowed to use the API
+    # settings.openai_api_key → reads OPENAI_API_KEY from our .env file via config.py
     #                           the key never touches the frontend — it lives server-side only
-    client = genai.Client(api_key=settings.gemini_api_key)
+    client = OpenAI(api_key=settings.openai_api_key)
 
-    # Step 5: Send the prompt to Gemini with streaming enabled
+    # Step 5: Send the prompt to OpenAI with streaming enabled
     #
-    # client.models                  → access the AI models available on our client
-    # .generate_content_stream()     → like generate_content() but returns chunks instead of one big response
-    # model="gemini-2.0-flash"       → which AI model to use (flash = fast + free tier friendly)
-    # contents=full_prompt           → the full text we're sending (system instructions + user data)
-    response = client.models.generate_content_stream(
-        model="gemini-2.0-flash",
-        contents=full_prompt,
-    )
+    # chat.completions.create() → the main endpoint for text generation
+    # model="gpt-4o-mini"       → fast and cheap model, great for this use case
+    # messages=[]               → OpenAI uses a messages array with roles (system + user)
+    # stream=True               → returns chunks instead of waiting for full response
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},  # AI's instructions
+                {"role": "user", "content": f"Here is the student's habit data:\n\n{user_summary}"}
+            ],
+            stream=True,
+        )
 
-    # Step 6: Yield each chunk as it arrives
-    #
-    # response is an iterator — Gemini sends pieces as it writes them, not all at once
-    # each chunk contains a few words of the response
-    # chunk.text  → the actual text in this chunk (some chunks are metadata with no text — skip those)
-    # yield       → sends this piece immediately to whoever called stream_insights()
-    #               instead of waiting for the full response, the frontend gets words in real time
-    for chunk in response:
-        if chunk.text:
-            yield chunk.text  # → sends "You're doing" ... "great with" ... "LeetCode!" piece by piece
+        # Step 6: Yield each chunk as it arrives
+        # chunk.choices[0].delta.content → the text in this chunk (None for metadata chunks)
+        for chunk in response:
+            content = chunk.choices[0].delta.content
+            if content:
+                yield content  # → sends "You're doing" ... "great with" ... "LeetCode!" piece by piece
+
+    except Exception as e:
+        yield f"\n\n[Error getting insights: {str(e)}]"

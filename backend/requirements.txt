@@ -23,4 +23,4 @@ python-multipart==0.0.6   # Form data parsing for OAuth2
 httpx==0.26.0             # For testing async endpoints
 
 # API
-google-genai>=1.0.0          # Google Gemini API SDK
+openai>=1.0.0                 # OpenAI API SDK
