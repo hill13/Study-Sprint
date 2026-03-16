@@ -10,7 +10,7 @@ alembic==1.13.1           # Database migrations - version control for your schem
 # Authentication
 python-jose[cryptography]==3.3.0  # JWT token creation and validation
 passlib[bcrypt]==1.7.4    # Password hashing (secure storage)
-bcrypt==4.0.1             # Pinned for passlib compatibility
+bcrypt==3.2.2             # Pinned for passlib compatibility (4.x breaks verify())
 
 # Validation & Settings
 pydantic==2.5.3           # Data validation (already included with FastAPI)
