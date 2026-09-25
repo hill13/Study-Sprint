@@ -14,7 +14,15 @@ Why separate them?
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
+
+
+# Shared password rules.
+#   min 8  - a floor worth enforcing on any real account
+#   max 72 - bcrypt only reads the first 72 BYTES of input, so anything longer
+#            is silently truncated. Rejecting it is clearer than pretending a
+#            100-character password is fully checked.
+PasswordStr = Field(min_length=8, max_length=72)
 
 
 # =============================================================================
@@ -40,7 +48,7 @@ class UserCreate(BaseModel):
     """Schema for user registration request."""
     email: EmailStr
     username: str
-    password: str
+    password: str = PasswordStr
 
 
 # =============================================================================
@@ -95,3 +103,38 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# =============================================================================
+# SCHEMA 4: Password reset
+# =============================================================================
+
+
+class ForgotPasswordRequest(BaseModel):
+    """Schema for requesting a password reset link."""
+    email: EmailStr
+
+
+class ForgotPasswordResponse(BaseModel):
+    """
+    Response for a reset request.
+
+    The message is intentionally identical whether or not the email exists -
+    a different response would let anyone probe which emails are registered.
+
+    reset_token is only populated when settings.expose_reset_token is on
+    (development convenience, since no email provider is configured).
+    """
+    message: str
+    reset_token: Optional[str] = None
+
+
+class ResetPasswordRequest(BaseModel):
+    """Schema for completing a password reset."""
+    token: str
+    new_password: str = PasswordStr
+
+
+class MessageResponse(BaseModel):
+    """Generic one-line message response."""
+    message: str

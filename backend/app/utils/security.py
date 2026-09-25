@@ -8,10 +8,11 @@ This module handles:
 - Decoding JWT tokens to verify user identity
 """
 
+import hashlib
 from datetime import datetime, timedelta
 from typing import Optional
 
-from jose import jwt
+from jose import jwt, JWTError
 from passlib.context import CryptContext
 
 from app.config import get_settings
@@ -175,3 +176,87 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
     # Step 5: Return the token
     return encoded_jwt
+
+
+# =============================================================================
+# PASSWORD RESET TOKENS
+# =============================================================================
+#
+# A reset token is a temporary key to an account, so it is deliberately NOT an
+# access token. Two properties keep it safe:
+#
+#   1. "type" claim - a reset token cannot be used as a login token, and a
+#      stolen login token cannot be used to reset a password. Without this,
+#      both are just "a JWT signed with SECRET_KEY" and become interchangeable.
+#
+#   2. "pwf" claim (password fingerprint) - a hash of the CURRENT password
+#      hash. Resetting the password changes the stored hash, which changes the
+#      fingerprint, which makes every previously issued token stop matching.
+#      That gives single-use tokens with no database table to store or clean up,
+#      and it silently invalidates old tokens whenever the password changes.
+
+PASSWORD_RESET_TOKEN_TYPE = "password_reset"
+
+
+def password_fingerprint(hashed_password: str) -> str:
+    """
+    Derive a short, stable fingerprint from a stored password hash.
+
+    Used to tie a reset token to one specific password. We hash the hash rather
+    than embedding it so the token never carries the bcrypt digest itself.
+    """
+    return hashlib.sha256(hashed_password.encode()).hexdigest()[:16]
+
+
+def create_password_reset_token(email: str, hashed_password: str) -> str:
+    """
+    Create a short-lived, single-use token for resetting a password.
+
+    Args:
+        email: Identifies the account the token unlocks
+        hashed_password: The user's CURRENT hash, used to build the fingerprint
+
+    Returns:
+        Encoded JWT reset token
+    """
+    expire = datetime.utcnow() + timedelta(
+        minutes=settings.password_reset_token_expire_minutes
+    )
+
+    to_encode = {
+        "sub": email,
+        "exp": expire,
+        "type": PASSWORD_RESET_TOKEN_TYPE,
+        "pwf": password_fingerprint(hashed_password),
+    }
+
+    return jwt.encode(to_encode, settings.secret_key, algorithm=settings.algorithm)
+
+
+def verify_password_reset_token(token: str) -> Optional[dict]:
+    """
+    Decode and sanity-check a password reset token.
+
+    Returns:
+        {"email": ..., "fingerprint": ...} if the token is well-formed, signed
+        by us, unexpired, and actually a reset token. None otherwise.
+
+    Note this does NOT confirm the fingerprint still matches the stored hash -
+    that needs a database lookup and happens in the route handler.
+    """
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+    except JWTError:
+        # Covers a bad signature, a malformed token, and an expired one
+        return None
+
+    # Reject anything that is not specifically a reset token (e.g. a login token)
+    if payload.get("type") != PASSWORD_RESET_TOKEN_TYPE:
+        return None
+
+    email = payload.get("sub")
+    fingerprint = payload.get("pwf")
+    if not email or not fingerprint:
+        return None
+
+    return {"email": email, "fingerprint": fingerprint}

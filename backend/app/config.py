@@ -22,6 +22,14 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 
+    # Password reset
+    # Short window on purpose - a reset token is a temporary key to an account
+    password_reset_token_expire_minutes: int = 15
+    # No email provider is wired up, so the reset token is written to the server
+    # log. Set this to true in development to ALSO return it in the API response
+    # so the flow can be exercised without email. Never enable in production.
+    expose_reset_token: bool = False
+
     # OpenAI API (for AI Insights feature)
     openai_api_key: str = ""
     class Config:
