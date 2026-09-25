@@ -67,7 +67,7 @@ function Login() {
           </div>
 
           {/* Password field */}
-          <div className="mb-6">
+          <div className="mb-2">
             <label className="block text-gray-700 mb-2">Password</label>
             <input
               type="password"
@@ -77,6 +77,13 @@ function Login() {
               placeholder="Enter your password"
               required
             />
+          </div>
+
+          {/* Forgot password link */}
+          <div className="text-right mb-6">
+            <Link to="/forgot-password" className="text-sm text-blue-500 hover:underline">
+              Forgot password?
+            </Link>
           </div>
 
           {/* Submit button */}

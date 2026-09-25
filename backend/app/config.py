@@ -30,6 +30,16 @@ class Settings(BaseSettings):
     # so the flow can be exercised without email. Never enable in production.
     expose_reset_token: bool = False
 
+    # Email delivery (Brevo)
+    # brevo_api_key empty => reset emails are logged instead of sent, so local
+    # development works with no account and no network calls.
+    brevo_api_key: str = ""
+    mail_from_email: str = ""        # must be a VERIFIED sender in Brevo
+    mail_from_name: str = "StudySprint"
+
+    # Where the reset link points. Must match the deployed frontend origin.
+    frontend_url: str = "http://localhost:5173"
+
     # OpenAI API (for AI Insights feature)
     openai_api_key: str = ""
     class Config:

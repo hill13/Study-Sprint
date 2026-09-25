@@ -91,6 +91,41 @@ export const auth = {
 
     return response.json()  // Returns { access_token, token_type }
   },
+
+  // Request a password reset email
+  // Always resolves for any email - the backend deliberately gives the same
+  // answer whether or not an account exists, so attackers can't probe for
+  // registered addresses. Don't add UI that implies otherwise.
+  forgotPassword: async (email: string) => {
+    const response = await fetch(`${API_URL}/auth/forgot-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Request failed' }))
+      throw new Error(error.detail || 'Request failed')
+    }
+
+    return response.json()  // Returns { message, reset_token? }
+  },
+
+  // Complete a password reset using the token from the email link
+  resetPassword: async (token: string, newPassword: string) => {
+    const response = await fetch(`${API_URL}/auth/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, new_password: newPassword }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Reset failed' }))
+      throw new Error(error.detail || 'Reset failed')
+    }
+
+    return response.json()  // Returns { message }
+  },
 }
 
 // =============================================================================

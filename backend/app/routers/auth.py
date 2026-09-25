@@ -10,7 +10,7 @@ Endpoints:
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -27,6 +27,7 @@ from app.schemas.user import (
     MessageResponse,
 )
 from app.schemas.token import Token
+from app.services.email import send_password_reset_email, build_reset_url
 from app.utils.security import (
     hash_password,
     verify_password,
@@ -202,7 +203,11 @@ def login_for_access_token(
 # =============================================================================
 
 @router.post("/forgot-password", response_model=ForgotPasswordResponse)
-def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
+def forgot_password(
+    payload: ForgotPasswordRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
     """
     Start a password reset.
 
@@ -221,10 +226,14 @@ def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db
 
     # Bind the token to the current password hash so it can only be used once
     token = create_password_reset_token(user.email, user.hashed_password)
+    reset_url = build_reset_url(token)
 
-    # No email provider is configured, so the token goes to the server log.
-    # In a real deployment this is where you would send the reset email.
-    logger.info("Password reset token issued for %s: %s", user.email, token)
+    # Send after the response is returned. Calling Brevo inline would add its
+    # latency to every request and would leak whether the address exists via
+    # response time - a slow reply for real accounts, an instant one otherwise.
+    background_tasks.add_task(send_password_reset_email, user.email, reset_url)
+
+    logger.info("Password reset requested for %s", user.email)
 
     if settings.expose_reset_token:
         return ForgotPasswordResponse(message=message, reset_token=token)
